@@ -6,7 +6,6 @@
 CREATE DATABASE IF NOT EXISTS `user_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `user_db`;
 
-DROP TABLE IF EXISTS `loyalty_history`;
 DROP TABLE IF EXISTS `driver_profiles`;
 DROP TABLE IF EXISTS `users`;
 DROP TABLE IF EXISTS `roles`;
@@ -25,8 +24,6 @@ CREATE TABLE `users` (
     `phone` VARCHAR(15) NOT NULL UNIQUE,
     `password_hash` VARCHAR(255) NOT NULL,
     `avatar_url` VARCHAR(255) NULL,
-    `membership_tier` ENUM('BRONZE', 'SILVER', 'GOLD') DEFAULT 'BRONZE',
-    `loyalty_points` INT DEFAULT 0,
     `is_active` BOOLEAN DEFAULT TRUE,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -43,41 +40,26 @@ CREATE TABLE `driver_profiles` (
     CONSTRAINT `fk_driver_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `loyalty_history` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `user_id` INT NOT NULL,
-    `points_change` INT NOT NULL COMMENT 'Dương là tích điểm, âm là tiêu điểm',
-    `action_type` ENUM('WELCOME_BONUS', 'TRIP_REWARD', 'REDEEM_DISCOUNT', 'TIER_UPGRADE') NOT NULL,
-    `description` VARCHAR(255) NULL,
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT `fk_loyalty_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 INSERT INTO `roles` (`id`, `name`, `description`) VALUES
 (1, 'ADMIN', 'Quản trị viên toàn hệ thống'),
 (2, 'CUSTOMER', 'Khách hàng đặt vé'),
 (3, 'DRIVER', 'Tài xế / Nhân viên phụ trách chuyến xe');
 
-INSERT INTO `users` (`id`, `role_id`, `full_name`, `email`, `phone`, `password_hash`, `membership_tier`, `loyalty_points`) VALUES
-(1, 1, 'Nguyễn Quản Trị', 'admin@vexere.com', '0901000001', '$2b$10$eE..mockedAdminHashForTestingPurposesOnly..', 'GOLD', 2500),
-(2, 3, 'Trần Văn Lái (Tài xế 1)', 'driver1@vexere.com', '0902000001', '$2b$10$eE..mockedDriverHashForTestingPurposesOnly..', 'BRONZE', 0),
-(3, 3, 'Lê Văn Tài (Tài xế 2)', 'driver2@vexere.com', '0902000002', '$2b$10$eE..mockedDriverHashForTestingPurposesOnly..', 'BRONZE', 0),
-(4, 2, 'Hoàng Khách Hàng', 'khachhang@gmail.com', '0903000001', '$2b$10$eE..mockedCustomerHashForTestingPurposes..', 'SILVER', 850);
+INSERT INTO `users` (`id`, `role_id`, `full_name`, `email`, `phone`, `password_hash`) VALUES
+(1, 1, 'Nguyễn Quản Trị', 'admin@vexere.com', '0901000001', '$2b$10$eE..mockedAdminHashForTestingPurposesOnly..'),
+(2, 3, 'Trần Văn Lái (Tài xế 1)', 'driver1@vexere.com', '0902000001', '$2b$10$eE..mockedDriverHashForTestingPurposesOnly..'),
+(3, 3, 'Lê Văn Tài (Tài xế 2)', 'driver2@vexere.com', '0902000002', '$2b$10$eE..mockedDriverHashForTestingPurposesOnly..'),
+(4, 2, 'Hoàng Khách Hàng', 'khachhang@gmail.com', '0903000001', '$2b$10$eE..mockedCustomerHashForTestingPurposes..');
 
 INSERT INTO `driver_profiles` (`user_id`, `license_number`, `experience_years`, `status`) VALUES
 (2, 'GPLX-HN-99881', 5, 'ACTIVE'),
 (3, 'GPLX-HN-77223', 8, 'ACTIVE');
-
-INSERT INTO `loyalty_history` (`user_id`, `points_change`, `action_type`, `description`) VALUES
-(4, 500, 'WELCOME_BONUS', 'Thưởng chào mừng kích hoạt tài khoản'),
-(4, 350, 'TRIP_REWARD', 'Tích lũy 3% sau khi hoàn thành chuyến Hà Nội - Sa Pa');
 
 -- --------------------------------------------------------------------
 -- 2. KHỞI TẠO trip_db
 CREATE DATABASE IF NOT EXISTS `trip_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `trip_db`;
 
-DROP TABLE IF EXISTS `reviews`;
 DROP TABLE IF EXISTS `trips`;
 DROP TABLE IF EXISTS `seats`;
 DROP TABLE IF EXISTS `buses`;
@@ -138,17 +120,6 @@ CREATE TABLE `trips` (
     CONSTRAINT `fk_trip_bus` FOREIGN KEY (`bus_id`) REFERENCES `buses` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `reviews` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `trip_id` INT NOT NULL,
-    `user_id` INT NOT NULL,
-    `customer_name` VARCHAR(100) NOT NULL,
-    `rating` TINYINT NOT NULL CHECK (`rating` >= 1 AND `rating` <= 5),
-    `comment` TEXT NULL,
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT `fk_review_trip` FOREIGN KEY (`trip_id`) REFERENCES `trips` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 INSERT INTO `stations` (`id`, `name`, `city`, `address`) VALUES
 (1, 'Bến xe Mỹ Đình', 'Hà Nội', 'Số 20 Phạm Hùng, Nam Từ Liêm, Hà Nội'),
 (2, 'Bến xe Sa Pa', 'Lào Cai', 'Thị xã Sa Pa, Lào Cai'),
@@ -175,10 +146,6 @@ INSERT INTO `seats` (`bus_id`, `seat_code`, `floor_number`, `seat_type`) VALUES
 INSERT INTO `trips` (`id`, `route_id`, `bus_id`, `driver_id`, `departure_time`, `arrival_time`, `price`, `status`) VALUES
 (1, 1, 1, 2, DATE_ADD(NOW(), INTERVAL 1 DAY), DATE_ADD(DATE_ADD(NOW(), INTERVAL 1 DAY), INTERVAL 6 HOUR), 320000.00, 'SCHEDULED'),
 (2, 1, 1, 3, DATE_ADD(NOW(), INTERVAL 2 DAY), DATE_ADD(DATE_ADD(NOW(), INTERVAL 2 DAY), INTERVAL 6 HOUR), 320000.00, 'SCHEDULED');
-
-INSERT INTO `reviews` (`trip_id`, `user_id`, `customer_name`, `rating`, `comment`, `created_at`) VALUES
-(1, 4, 'Hoàng Khách Hàng', 5, 'Xe chạy rất êm, bác tài lái cẩn thận, giường nằm sạch sẽ thơm tho!', NOW()),
-(1, 5, 'Lê Thị Mai', 5, 'Khởi hành đúng giờ, có nước suối và khăn lạnh miễn phí. Rất hài lòng!', NOW());
 
 -- --------------------------------------------------------------------
 -- 3. KHỞI TẠO booking_db
@@ -268,3 +235,4 @@ INSERT INTO `payments` (`id`, `booking_id`, `booking_code`, `payment_method`, `a
 
 INSERT INTO `payment_logs` (`payment_id`, `gateway_response`) VALUES
 (1, '{"vnp_ResponseCode":"00","vnp_TransactionNo":"1429988","vnp_Amount":"64000000","vnp_BankCode":"NCB"}');
+bookingsbookingsseat_locksticketsbookingsbooking_db

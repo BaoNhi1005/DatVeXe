@@ -12,12 +12,12 @@ export default function UserProfileModal({
   onOpenMyTickets, 
   onLogout 
 }) {
-  if (!isOpen || !currentUser) return null;
-
   const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'membership' | 'security' | 'settings'
   const [showEmail, setShowEmail] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSavedToast, setIsSavedToast] = useState(false);
+
+  if (!isOpen || !currentUser) return null;
 
   // Mặc định khách hàng là HỘI VIÊN BẠC (850 điểm / 1500 điểm thăng hạng Vàng)
   const tier = currentUser.membershipTier || "SILVER";
