@@ -15,15 +15,13 @@ const ROUTE_COORDINATES = [
 ];
 
 export default function TripTrackingModal({ isOpen, onClose, ticket }) {
-  if (!isOpen) return null;
-
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const [currentStep, setCurrentStep] = useState(2); // Vị trí xe hiện tại (đang giữa Phú Thọ và Yên Bái)
   const [speed, setSpeed] = useState(65);
 
   useEffect(() => {
-    if (!mapContainerRef.current) return;
+    if (!isOpen || !mapContainerRef.current) return;
 
     // Fix lỗi icon marker mặc định của Leaflet trong webpack/vite
     delete L.Icon.Default.prototype._getIconUrl;
@@ -115,7 +113,9 @@ export default function TripTrackingModal({ isOpen, onClose, ticket }) {
       clearInterval(speedInterval);
       map.remove();
     };
-  }, [currentStep]);
+  }, [isOpen, currentStep]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/70 backdrop-blur-sm animate-fadeIn">

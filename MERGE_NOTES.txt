@@ -1,0 +1,37 @@
+ECOBUS - MERGED WORKING COPY
+
+This copy uses the local Admin-enabled project as its base and selectively merges customer-facing UI/features from the newer Git ZIP.
+
+Merged frontend features:
+- User profile and membership-tier/loyalty-points screen
+- Trip review modal and review entry point on trip cards
+- Expanded My Tickets screen: cancel-ticket demo, review, and tracking actions
+- Trip tracking map demo (Leaflet / OpenStreetMap)
+- Search-result sort and time filters
+
+Preserved:
+- Existing AdminDashboard.jsx and its Admin API integration
+- Existing Express server, routes, controllers, and local database_update.sql
+- Existing login persistence through localStorage
+- Existing EcoBus folder name and project setup
+
+Important implementation limits:
+- Reviews and ticket cancellation are currently frontend state/demo behavior; they are not persisted through backend APIs.
+- Membership tier and points are displayed from the current user object with demo defaults. The existing backend does not yet expose loyalty endpoints.
+- Trip tracking is a simulated route/status display, not live GPS from a vehicle.
+- The new review/loyalty database migration creates the schema, but the current backend does not yet read/write those tables.
+
+Setup:
+1. Keep your real server/.env locally. It is intentionally not included in this ZIP.
+2. Copy server/.env.example to server/.env and fill in your own DB credentials if needed.
+3. In EcoBus, run: npm install
+   (Leaflet was added for the tracking-map component.)
+4. Run frontend: npm.cmd run dev
+5. Run backend in another terminal: npm.cmd run dev
+
+Database:
+- For an existing database with data, run database/05_reviews_loyalty_update.sql once.
+- Do NOT rerun database/init_all.sql on an existing database: it drops and recreates tables.
+- For a fresh database, run database/init_all.sql first, then the migration above.
+
+The build could not be fully run in this environment because the supplied node_modules tree is missing Vite's optional native Rolldown binding. All JS/JSX source files passed a syntax parse check.
